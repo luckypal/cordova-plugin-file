@@ -287,6 +287,8 @@ FileReader.prototype.readAsArrayBuffer = function (file) {
         return this._realReader.readAsArrayBuffer(file);
     }
 
+    file.start = Math.round(file.start);
+    file.end = Math.round(file.end);
     var totalSize = file.end - file.start;
     readSuccessCallback.bind(this)('readAsArrayBuffer', null, file.start, totalSize, function (r) {
         var resultArray = (this._progress === 0 ? new Uint8Array(totalSize) : new Uint8Array(this._result));
