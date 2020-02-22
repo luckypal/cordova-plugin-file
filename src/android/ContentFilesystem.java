@@ -164,6 +164,13 @@ public class ContentFilesystem extends Filesystem {
 			int offset, boolean isBinary) throws NoModificationAllowedException {
         throw new NoModificationAllowedException("Couldn't write to file given its content URI");
     }
+
+	@Override
+	public long writeBlankToFileAtURL(LocalFilesystemURL inputURL, int offset,
+            int size) throws NoModificationAllowedException {
+        throw new NoModificationAllowedException("Couldn't write to file given its content URI");
+    }
+
 	@Override
 	public long truncateFileAtURL(LocalFilesystemURL inputURL, long size)
 			throws NoModificationAllowedException {

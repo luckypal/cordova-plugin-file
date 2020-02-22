@@ -420,6 +420,41 @@ public class LocalFilesystem extends Filesystem {
         return rawData.length;
 	}
 
+	@Override
+	public long writeBlankToFileAtURL(LocalFilesystemURL inputURL, int offset,
+			int size) throws IOException, NoModificationAllowedException {
+        int orgSize = size;
+        try
+        {
+            int blankSize = 1024 * 1024;
+            byte blankBuff[] = new byte[blankSize];
+
+            String absolutePath = filesystemPathForURL(inputURL);
+            RandomAccessFile out = new RandomAccessFile(absolutePath, "rw");
+            try {
+                out.seek(offset);
+                while (size > 0) {
+                    int writingSize = size > blankSize ? blankSize : size;
+                    size -= writingSize;
+                    out.write(blankBuff, 0, writingSize);
+                }
+                blankBuff = null;
+            } finally {
+                out.close();
+            }
+        }
+        catch (NullPointerException e)
+        {
+            // This is a bug in the Android implementation of the Java Stack
+            NoModificationAllowedException realException = new NoModificationAllowedException(inputURL.toString());
+            realException.initCause(e);
+            e.printStackTrace();
+            throw realException;
+        }
+
+        return orgSize;
+    }
+
     private boolean isPublicDirectory(String absolutePath) {
         // TODO: should expose a way to scan app's private files (maybe via a flag).
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

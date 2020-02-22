@@ -217,6 +217,82 @@ FileWriter.prototype.write = function (data, isPendingBlobReadResult) {
         }, 'File', 'write', [this.localURL, data, this.position, isBinary]);
 };
 
+FileWriter.prototype.writeBlank = function (offset, length) {
+    // Throw an exception if we are already writing a file
+    if (this.readyState === FileWriter.WRITING) {
+        throw new FileError(FileError.INVALID_STATE_ERR);
+    }
+
+    if (offset < 0 || length <= 0) {
+        return;
+    }
+
+    // Throw an exception if we are already writing a file
+    if (this.readyState === FileWriter.WRITING && !isPendingBlobReadResult) {
+        throw new FileError(FileError.INVALID_STATE_ERR);
+    }
+
+    // WRITING state
+    this.readyState = FileWriter.WRITING;
+
+    var me = this;
+
+    // If onwritestart callback
+    if (typeof me.onwritestart === 'function') {
+        me.onwritestart(new ProgressEvent('writestart', {'target': me}));
+    }
+
+    // Write file
+    exec(
+        function (r) {
+            // If DONE (cancelled), then don't do anything
+            if (me.readyState === FileWriter.DONE) {
+                return;
+            }
+
+            // position always increases by bytes written because file would be extended
+            me.position += r;
+            // The length of the file is now where we are done writing.
+
+            me.length = Math.max(me.length, me.position);
+
+            // DONE state
+            me.readyState = FileWriter.DONE;
+
+            // If onwrite callback
+            if (typeof me.onwrite === 'function') {
+                me.onwrite(new ProgressEvent('write', {'target': me}));
+            }
+
+            // If onwriteend callback
+            if (typeof me.onwriteend === 'function') {
+                me.onwriteend(new ProgressEvent('writeend', {'target': me}));
+            }
+        },
+        function (e) {
+            // If DONE (cancelled), then don't do anything
+            if (me.readyState === FileWriter.DONE) {
+                return;
+            }
+
+            // DONE state
+            me.readyState = FileWriter.DONE;
+
+            // Save error
+            me.error = new FileError(e);
+
+            // If onerror callback
+            if (typeof me.onerror === 'function') {
+                me.onerror(new ProgressEvent('error', {'target': me}));
+            }
+
+            // If onwriteend callback
+            if (typeof me.onwriteend === 'function') {
+                me.onwriteend(new ProgressEvent('writeend', {'target': me}));
+            }
+        }, 'File', 'writeBlank', [this.localURL, offset, length]);
+}
+
 /**
  * Moves the file pointer to the location specified.
  *

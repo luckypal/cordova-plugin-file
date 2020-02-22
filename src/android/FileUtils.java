@@ -76,6 +76,7 @@ public class FileUtils extends CordovaPlugin {
 
     public static final int ACTION_GET_FILE = 0;
     public static final int ACTION_WRITE = 1;
+    public static final int ACTION_WRITE_BLANK = 5;
     public static final int ACTION_GET_DIRECTORY = 2;
 
     public static final int WRITE = 3;
@@ -363,6 +364,25 @@ public class FileUtils extends CordovaPlugin {
                     else {
                         long fileSize = write(fname, data, offset, isBinary);
                         callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, fileSize));
+                    }
+
+                }
+            }, rawArgs, callbackContext);
+        }
+        else if (action.equals("writeBlank")) {
+            threadhelper( new FileOp( ){
+                public void run(JSONArray args) throws JSONException, FileNotFoundException, IOException, NoModificationAllowedException {
+                    String fname=args.getString(0);
+                    String nativeURL = resolveLocalFileSystemURI(fname).getString("nativeURL");
+                    int offset=args.getInt(1);
+                    int size=args.getInt(2);
+
+                    if(needPermission(nativeURL, WRITE)) {
+                        getWritePermission(rawArgs, ACTION_WRITE_BLANK, callbackContext);
+                    }
+                    else {
+                        long writtenSize = writeBlank(fname, offset, size);
+                        callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, writtenSize));
                     }
 
                 }
@@ -1144,6 +1164,22 @@ public class FileUtils extends CordovaPlugin {
 
     }
 
+    public long writeBlank(String srcURLstr, int offset, int size) throws FileNotFoundException, IOException, NoModificationAllowedException {
+        try {
+        	LocalFilesystemURL inputURL = LocalFilesystemURL.parse(srcURLstr);
+        	Filesystem fs = this.filesystemForURL(inputURL);
+        	if (fs == null) {
+        		throw new MalformedURLException("No installed handlers for this URL");
+        	}
+
+            long x = fs.writeBlankToFileAtURL(inputURL, offset, size); LOG.d("TEST",srcURLstr + ": "+x); return x;
+        } catch (IllegalArgumentException e) {
+            MalformedURLException mue = new MalformedURLException("Unrecognized filesystem URL");
+            mue.initCause(e);
+        	throw mue;
+        }
+    }
+
     /**
      * Truncate the file to size
      */
@@ -1214,6 +1250,17 @@ public class FileUtils extends CordovaPlugin {
                             Boolean isBinary=args.getBoolean(3);
                             long fileSize = write(fname, data, offset, isBinary);
                             req.getCallbackContext().sendPluginResult(new PluginResult(PluginResult.Status.OK, fileSize));
+                        }
+                    }, req.getRawArgs(), req.getCallbackContext());
+                    break;
+                case ACTION_WRITE_BLANK:
+                    threadhelper( new FileOp( ){
+                        public void run(JSONArray args) throws JSONException, FileNotFoundException, IOException, NoModificationAllowedException {
+                            String fname=args.getString(0);
+                            int offset=args.getInt(1);
+                            int size=args.getInt(2);
+                            long writtenSize = writeBlank(fname, offset, size);
+                            req.getCallbackContext().sendPluginResult(new PluginResult(PluginResult.Status.OK, writtenSize));
                         }
                     }, req.getRawArgs(), req.getCallbackContext());
                     break;

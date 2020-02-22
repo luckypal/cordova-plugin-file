@@ -267,6 +267,11 @@ public class AssetFilesystem extends Filesystem {
     }
 
     @Override
+    long writeBlankToFileAtURL(LocalFilesystemURL inputURL, int offset, int size) throws NoModificationAllowedException, IOException {
+        throw new NoModificationAllowedException("Assets are read-only");
+    }
+
+    @Override
     long truncateFileAtURL(LocalFilesystemURL inputURL, long size) throws IOException, NoModificationAllowedException {
         throw new NoModificationAllowedException("Assets are read-only");
     }
