@@ -166,7 +166,7 @@ FileWriter.prototype.write = function (data, isPendingBlobReadResult) {
 
     // Write file
     exec(
-        // Success callback
+        // Success callback, r: Written length
         function (r) {
             // If DONE (cancelled), then don't do anything
             if (me.readyState === FileWriter.DONE) {
@@ -177,7 +177,7 @@ FileWriter.prototype.write = function (data, isPendingBlobReadResult) {
             me.position += r;
             // The length of the file is now where we are done writing.
 
-            me.length = me.position;
+            me.length = Math.max(me.length, me.position);
 
             // DONE state
             me.readyState = FileWriter.DONE;

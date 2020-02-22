@@ -378,8 +378,8 @@ public class LocalFilesystem extends Filesystem {
 
         boolean append = false;
         if (offset > 0) {
-            this.truncateFileAtURL(inputURL, offset);
-            append = true;
+            // this.truncateFileAtURL(inputURL, offset);
+            // append = true;
         }
 
         byte[] rawData;
@@ -388,16 +388,19 @@ public class LocalFilesystem extends Filesystem {
         } else {
             rawData = data.getBytes(Charset.defaultCharset());
         }
-        ByteArrayInputStream in = new ByteArrayInputStream(rawData);
+        // ByteArrayInputStream in = new ByteArrayInputStream(rawData);
         try
         {
-        	byte buff[] = new byte[rawData.length];
+        	// byte buff[] = new byte[rawData.length];
             String absolutePath = filesystemPathForURL(inputURL);
-            FileOutputStream out = new FileOutputStream(absolutePath, append);
+            RandomAccessFile out = new RandomAccessFile(absolutePath, "rw");
+            // FileOutputStream out = new FileOutputStream(absolutePath, append);
             try {
-            	in.read(buff, 0, buff.length);
-            	out.write(buff, 0, rawData.length);
-            	out.flush();
+            	// in.read(buff, 0, buff.length);
+            	// out.write(buff, 0, rawData.length);
+                out.seek(offset);
+                out.write(rawData, 0, rawData.length);
+            	// out.flush();
             } finally {
             	// Always close the output
             	out.close();
