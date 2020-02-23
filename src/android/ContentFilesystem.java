@@ -171,6 +171,11 @@ public class ContentFilesystem extends Filesystem {
         throw new NoModificationAllowedException("Couldn't write to file given its content URI");
     }
 
+    @Override
+    String verifyPieces(LocalFilesystemURL inputURL, String strPieces, int chunkSize) throws Exception {
+        throw new NoModificationAllowedException("Assets are read-only");
+    }
+
 	@Override
 	public long truncateFileAtURL(LocalFilesystemURL inputURL, long size)
 			throws NoModificationAllowedException {

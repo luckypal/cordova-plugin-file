@@ -28,9 +28,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
+import java.security.MessageDigest;
 import org.apache.cordova.CordovaResourceApi;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONArray;
 
 import android.os.Build;
 import android.os.Environment;
@@ -38,6 +40,7 @@ import android.util.Base64;
 import android.net.Uri;
 import android.content.Context;
 import android.content.Intent;
+import org.apache.cordova.LOG;
 
 import java.nio.charset.Charset;
 
@@ -400,6 +403,7 @@ public class LocalFilesystem extends Filesystem {
             	// out.write(buff, 0, rawData.length);
                 out.seek(offset);
                 out.write(rawData, 0, rawData.length);
+                LOG.d("io.ionic.starter  SystemWebChromeClient", "Write Data: " + offset + "  " + rawData.length);
             	// out.flush();
             } finally {
             	// Always close the output
@@ -414,6 +418,7 @@ public class LocalFilesystem extends Filesystem {
             // This is a bug in the Android implementation of the Java Stack
             NoModificationAllowedException realException = new NoModificationAllowedException(inputURL.toString());
             realException.initCause(e);
+            e.printStackTrace();
             throw realException;
         }
 
@@ -453,6 +458,63 @@ public class LocalFilesystem extends Filesystem {
         }
 
         return orgSize;
+    }
+    
+    public String convertToHex(byte[] data) {
+        StringBuilder buf = new StringBuilder();
+        for (byte b : data) {
+            int halfbyte = (b >>> 4) & 0x0F;
+            int two_halfs = 0;
+            do {
+                buf.append((0 <= halfbyte) && (halfbyte <= 9) ? (char) ('0' + halfbyte) : (char) ('a' + (halfbyte - 10)));
+                halfbyte = b & 0x0F;
+            } while (two_halfs++ < 1);
+        }
+        return buf.toString();
+    }
+
+    @Override
+    public String verifyPieces(LocalFilesystemURL inputURL, String strPieces, int chunkSize) throws Exception {
+        JSONArray jsonPieces = new JSONArray(strPieces);
+        int piecesLen = jsonPieces.length();
+
+        String absolutePath = filesystemPathForURL(inputURL);
+        RandomAccessFile file = new RandomAccessFile(absolutePath, "r");
+
+        byte chunkBuf[] = new byte [chunkSize];
+        int readSize = chunkSize;
+        int offset = 0;
+        int index = 0;
+        MessageDigest md = MessageDigest.getInstance("SHA-1");
+        String verifyResult = "";
+
+        LOG.d("io.ionic.starter  SystemWebChromeClient ", "START To verify pieces  " + piecesLen);
+
+        while (index < piecesLen
+            && (readSize = file.read(chunkBuf, 0, chunkSize)) > 0) {
+            md.update(chunkBuf, 0, readSize);
+            byte[] sha1hash = md.digest();
+            String hashResult = convertToHex(sha1hash);
+
+            if (hashResult.equals(jsonPieces.getString(index))) {
+                verifyResult += "1";
+            } else {
+                verifyResult += "0";
+            }
+
+            index ++;
+            md.reset();
+        }
+
+        for (int i = index; i < piecesLen; i ++) {
+            verifyResult += "0";
+        }
+
+        file.close();
+
+        LOG.d("io.ionic.starter  SystemWebChromeClient VerifyResult Java ", verifyResult);
+
+        return verifyResult;
     }
 
     private boolean isPublicDirectory(String absolutePath) {

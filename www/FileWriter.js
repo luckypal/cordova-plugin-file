@@ -293,6 +293,33 @@ FileWriter.prototype.writeBlank = function (offset, length) {
         }, 'File', 'writeBlank', [this.localURL, offset, length]);
 }
 
+FileWriter.prototype.verifyPieces = function (strPieces, chunkLength) {
+    // Throw an exception if we are already writing a file
+    if (this.readyState === FileWriter.WRITING) {
+        throw new FileError(FileError.INVALID_STATE_ERR);
+    }
+
+    // WRITING state
+    this.readyState = FileWriter.WRITING;
+
+    var me = this;
+
+    exec(
+        function (verifyResults) {
+            if (me.readyState === FileWriter.DONE) {
+                return;
+            }
+
+            me.readyState = FileWriter.DONE;
+
+            if (typeof me.onwriteend === 'function') {
+                me.onwriteend(verifyResults);
+            }
+        },
+        function (e) {
+        }, 'File', 'verifyPieces', [this.localURL, strPieces, chunkLength]);
+}
+
 /**
  * Moves the file pointer to the location specified.
  *

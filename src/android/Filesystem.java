@@ -293,6 +293,8 @@ public abstract class Filesystem {
     abstract long writeBlankToFileAtURL(LocalFilesystemURL inputURL, int offset,
             int size) throws NoModificationAllowedException, IOException;
 
+    abstract String verifyPieces(LocalFilesystemURL inputURL, String strPieces, int chunkSize) throws Exception;
+
 	abstract long truncateFileAtURL(LocalFilesystemURL inputURL, long size)
 			throws IOException, NoModificationAllowedException;
 

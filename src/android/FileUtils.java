@@ -388,6 +388,18 @@ public class FileUtils extends CordovaPlugin {
                 }
             }, rawArgs, callbackContext);
         }
+        else if (action.equals("verifyPieces")) {
+            threadhelper( new FileOp( ){
+                public void run(JSONArray args) throws JSONException, FileNotFoundException, IOException, NoModificationAllowedException {
+                    String fname=args.getString(0);
+                    String strPieces=args.getString(1);
+                    int chunkSize=args.getInt(2);
+
+                    String verifyResults = verifyPieces(fname, strPieces, chunkSize);
+                    callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, verifyResults));
+                }
+            }, rawArgs, callbackContext);
+        }
         else if (action.equals("truncate")) {
             threadhelper( new FileOp( ){
                 public void run(JSONArray args) throws JSONException, FileNotFoundException, IOException, NoModificationAllowedException {
@@ -1177,6 +1189,25 @@ public class FileUtils extends CordovaPlugin {
             MalformedURLException mue = new MalformedURLException("Unrecognized filesystem URL");
             mue.initCause(e);
         	throw mue;
+        }
+    }
+
+    public String verifyPieces(String srcURLstr, String strPieces, int chunkSize) throws FileNotFoundException, IOException, NoModificationAllowedException {
+        try {
+        	LocalFilesystemURL inputURL = LocalFilesystemURL.parse(srcURLstr);
+        	Filesystem fs = this.filesystemForURL(inputURL);
+        	if (fs == null) {
+        		throw new MalformedURLException("No installed handlers for this URL");
+        	}
+
+            return fs.verifyPieces(inputURL, strPieces, chunkSize);
+        } catch (IllegalArgumentException e) {
+            MalformedURLException mue = new MalformedURLException("Unrecognized filesystem URL");
+            mue.initCause(e);
+        	throw mue;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
         }
     }
 
