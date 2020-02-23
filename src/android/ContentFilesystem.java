@@ -176,6 +176,11 @@ public class ContentFilesystem extends Filesystem {
         throw new NoModificationAllowedException("Assets are read-only");
     }
 
+    @Override
+    String getPieceList(LocalFilesystemURL inputURL, int pieceLength) throws Exception {
+        throw new NoModificationAllowedException("Assets are read-only");
+    }
+
 	@Override
 	public long truncateFileAtURL(LocalFilesystemURL inputURL, long size)
 			throws NoModificationAllowedException {

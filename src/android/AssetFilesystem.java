@@ -277,6 +277,11 @@ public class AssetFilesystem extends Filesystem {
     }
 
     @Override
+    String getPieceList(LocalFilesystemURL inputURL, int pieceLength) throws Exception {
+        throw new NoModificationAllowedException("Assets are read-only");
+    }
+
+    @Override
     long truncateFileAtURL(LocalFilesystemURL inputURL, long size) throws IOException, NoModificationAllowedException {
         throw new NoModificationAllowedException("Assets are read-only");
     }

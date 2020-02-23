@@ -295,6 +295,8 @@ public abstract class Filesystem {
 
     abstract String verifyPieces(LocalFilesystemURL inputURL, String strPieces, int chunkSize) throws Exception;
 
+    abstract String getPieceList(LocalFilesystemURL inputURL, int pieceLength) throws Exception;
+
 	abstract long truncateFileAtURL(LocalFilesystemURL inputURL, long size)
 			throws IOException, NoModificationAllowedException;
 

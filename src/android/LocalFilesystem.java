@@ -517,6 +517,28 @@ public class LocalFilesystem extends Filesystem {
         return verifyResult;
     }
 
+    @Override
+    public String getPieceList(LocalFilesystemURL inputURL, int pieceLength) throws Exception {
+        String absolutePath = filesystemPathForURL(inputURL);
+        RandomAccessFile file = new RandomAccessFile(absolutePath, "r");
+        MessageDigest md = MessageDigest.getInstance("SHA-1");
+        int readSize = 0;
+        String piecesList = "";
+        byte chunkBuf[] = new byte [pieceLength];
+
+        while ((readSize = file.read(chunkBuf, 0, pieceLength)) > 0) {
+            md.update(chunkBuf, 0, readSize);
+            byte[] sha1hash = md.digest();
+            String hashResult = convertToHex(sha1hash);
+
+            piecesList += hashResult;
+            md.reset();
+        }
+
+        file.close();
+        return piecesList;
+    }
+
     private boolean isPublicDirectory(String absolutePath) {
         // TODO: should expose a way to scan app's private files (maybe via a flag).
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

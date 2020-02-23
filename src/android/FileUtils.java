@@ -400,6 +400,17 @@ public class FileUtils extends CordovaPlugin {
                 }
             }, rawArgs, callbackContext);
         }
+        else if (action.equals("getPieceList")) {
+            threadhelper( new FileOp( ){
+                public void run(JSONArray args) throws JSONException, FileNotFoundException, IOException, NoModificationAllowedException {
+                    String fname=args.getString(0);
+                    int pieceLength=args.getInt(1);
+
+                    String piecesList = getPieceList(fname, pieceLength);
+                    callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, piecesList));
+                }
+            }, rawArgs, callbackContext);
+        }
         else if (action.equals("truncate")) {
             threadhelper( new FileOp( ){
                 public void run(JSONArray args) throws JSONException, FileNotFoundException, IOException, NoModificationAllowedException {
@@ -1201,6 +1212,25 @@ public class FileUtils extends CordovaPlugin {
         	}
 
             return fs.verifyPieces(inputURL, strPieces, chunkSize);
+        } catch (IllegalArgumentException e) {
+            MalformedURLException mue = new MalformedURLException("Unrecognized filesystem URL");
+            mue.initCause(e);
+        	throw mue;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+    public String getPieceList(String srcURLstr, int pieceLength) throws FileNotFoundException, IOException, NoModificationAllowedException {
+        try {
+        	LocalFilesystemURL inputURL = LocalFilesystemURL.parse(srcURLstr);
+        	Filesystem fs = this.filesystemForURL(inputURL);
+        	if (fs == null) {
+        		throw new MalformedURLException("No installed handlers for this URL");
+        	}
+
+            return fs.getPieceList(inputURL, pieceLength);
         } catch (IllegalArgumentException e) {
             MalformedURLException mue = new MalformedURLException("Unrecognized filesystem URL");
             mue.initCause(e);

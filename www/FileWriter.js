@@ -320,6 +320,37 @@ FileWriter.prototype.verifyPieces = function (strPieces, chunkLength) {
         }, 'File', 'verifyPieces', [this.localURL, strPieces, chunkLength]);
 }
 
+FileWriter.prototype.getPieceList = function (pieceLength) {
+    // Throw an exception if we are already writing a file
+    if (this.readyState === FileWriter.WRITING) {
+        throw new FileError(FileError.INVALID_STATE_ERR);
+    }
+
+    if (pieceLength == 0) {
+        return;
+    }
+
+    // WRITING state
+    this.readyState = FileWriter.WRITING;
+
+    var me = this;
+
+    exec(
+        function (piecesList) {
+            if (me.readyState === FileWriter.DONE) {
+                return;
+            }
+
+            me.readyState = FileWriter.DONE;
+
+            if (typeof me.onwriteend === 'function') {
+                me.onwriteend(piecesList);
+            }
+        },
+        function (e) {
+        }, 'File', 'getPieceList', [this.localURL, pieceLength]);
+}
+
 /**
  * Moves the file pointer to the location specified.
  *
